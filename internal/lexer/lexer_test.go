@@ -6,17 +6,19 @@ import (
 	"github.com/matheus-alpe/interpreter/internal/token"
 )
 
-func TestNextToken(t *testing.T) {
+type TokenTestExpected struct {
+	Type    token.TokenType
+	Literal string
+}
+
+func TestSimpleNextToken(t *testing.T) {
 	input := `=+(){},;`
 
-	tests := []struct {
-		expectedType    token.TokenType
-		expectedLiteral string
-	}{
+	tests := []TokenTestExpected {
 		{token.ASSIGN, "="},
 		{token.PLUS, "+"},
 		{token.LPARENT, "("},
-		{token.RPARENT, ")"},
+		{token.RPARENT, "="},
 		{token.LBRACE, "{"},
 		{token.RBRACE, "}"},
 		{token.COMMA, ","},
@@ -28,13 +30,17 @@ func TestNextToken(t *testing.T) {
 
     for i, tt := range tests {
         tok := l.NextToken()
-
-        if tok.Type != tt.expectedType {
-            t.Fatalf("tests[%d] - tokentype wrong. expected=%q, got=%q", i, tt.expectedType, tok.Type)
-        }
-
-        if tok.Literal != tt.expectedLiteral {
-            t.Fatalf("tests[%d] - literal wrong. expected=%q, got=%q", i, tt.expectedType, tok.Type)
-        }
+	checkToken(t, i, &tok, &tt)
     }
+}
+
+func checkToken(t *testing.T, i int, current *token.Token, expected *TokenTestExpected) {
+	t.Helper()
+        if current.Type != expected.Type {
+            t.Fatalf("tests[%d] - tokentype wrong. expected=%q, got=%q", i, expected.Type, current.Type)
+        }
+
+        if current.Literal != expected.Literal {
+            t.Fatalf("tests[%d] - literal wrong. expected=%q, got=%q", i, expected.Type, current.Type)
+        }
 }
