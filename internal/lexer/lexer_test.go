@@ -49,6 +49,12 @@ func TestComplexNextToken(t *testing.T) {
 	};
 
 	let result = add(five, ten);
+
+	if (5 < 10) {
+		return true;
+	} else {
+		return false;
+	}
 	`
 
 	tests := []TokenTestExpected{
@@ -88,6 +94,23 @@ func TestComplexNextToken(t *testing.T) {
 		{token.IDENT, "ten"},
 		{token.RPARENT, ")"},
 		{token.SEMICOLON, ";"},
+		{token.IF, "if"},
+		{token.LPARENT, "("},
+		{token.INT, "5"},
+		{token.LT, "<"},
+		{token.INT, "10"},
+		{token.RPARENT, ")"},
+		{token.LBRACE, "{"},
+		{token.RETURN, "return"},
+		{token.TRUE, "true"},
+		{token.SEMICOLON, ";"},
+		{token.RBRACE, "}"},
+		{token.ELSE, "else"},
+		{token.LBRACE, "{"},
+		{token.RETURN, "return"},
+		{token.FALSE, "false"},
+		{token.SEMICOLON, ";"},
+		{token.RBRACE, "}"},
 		{token.EOF, ""},
 	}
 
