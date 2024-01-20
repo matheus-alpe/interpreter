@@ -12,7 +12,7 @@ type TokenTestExpected struct {
 }
 
 func TestSimpleNextToken(t *testing.T) {
-	input := `=+(){},;`
+	input := `=+(){},;!-/*><`
 
 	tests := []TokenTestExpected{
 		{token.ASSIGN, "="},
@@ -23,6 +23,12 @@ func TestSimpleNextToken(t *testing.T) {
 		{token.RBRACE, "}"},
 		{token.COMMA, ","},
 		{token.SEMICOLON, ";"},
+		{token.BANG, "!"},
+		{token.MINUS, "-"},
+		{token.SLASH, "/"},
+		{token.ASTERISK, "*"},
+		{token.GT, ">"},
+		{token.LT, "<"},
 		{token.EOF, ""},
 	}
 
