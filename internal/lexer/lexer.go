@@ -60,6 +60,11 @@ func (l *Lexer) NextToken() token.Token {
 			tok.Type = token.LoopupIdentifier(tok.Literal)
 			return tok
 		}
+		if isDigit(l.ch) {
+			tok.Type = token.INT
+			tok.Literal = l.readNumber()
+			return tok
+		}
 		tok = newToken(token.ILLEGAL, l.ch)
 	}
 
@@ -81,6 +86,22 @@ func (l *Lexer) readIdentifier() string {
 
 func isLetter(ch byte) bool {
 	return 'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z' || ch == '_'
+}
+
+/*
+Only supports integers.
+TODO: implement for float, hex and octal
+*/
+func (l *Lexer) readNumber() string {
+	position := l.position
+	for isDigit(l.ch) {
+		l.readChar()
+	}
+	return l.input[position:l.position]
+}
+
+func isDigit(ch byte) bool {
+	return '0' <= ch && ch <= '9'
 }
 
 func (l *Lexer) skipWhitespace() {
