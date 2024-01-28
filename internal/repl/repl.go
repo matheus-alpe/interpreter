@@ -25,7 +25,7 @@ func Start(in io.Reader) {
 		l := lexer.New(line)
 
 		for tok := l.NextToken(); tok.Type != token.EOF; tok = l.NextToken() {
-			fmt.Printf("%v\n", tok)
+			fmt.Printf("%+v\n", tok)
 		}
 	}
 }
