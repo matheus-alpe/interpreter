@@ -18,16 +18,14 @@ func TestLetStatements(t *testing.T) {
 	p := New(l)
 
 	program := p.ParseProgram()
-	if program == nil {
-		t.Fatal("ParseProgram() returned nil")
-	}
+	checkParserErrors(t, p)
 
 	if len(program.Statements) != 3 {
 		t.Fatalf("program.Statements does not contain 3 statements. got=%d", len(program.Statements))
 	}
 
 	tests := []struct {
-		expectedIdentifer string
+		expectedIdentifier string
 	}{
 		{"x"},
 		{"y"},
@@ -36,13 +34,27 @@ func TestLetStatements(t *testing.T) {
 
 	for i, tt := range tests {
 		stmt := program.Statements[i]
-		if !testLetStatements(t, stmt, tt.expectedIdentifer) {
+		if !testLetStatements(t, stmt, tt.expectedIdentifier) {
 			return
 		}
 	}
 }
 
-func testLetStatements(t *testing.T, s ast.Statement, expectedIdentifer string) bool {
+func checkParserErrors(t *testing.T, p *Parser) {
+	errors := p.Errors()
+
+	if len(errors) == 0 {
+		return
+	}
+
+	t.Errorf("parser has %d errors", len(errors))
+	for _, msg := range errors {
+		t.Errorf("parser error: %q", msg)
+	}
+	t.FailNow()
+}
+
+func testLetStatements(t *testing.T, s ast.Statement, expectedIdentifier string) bool {
 	if s.TokenLiteral() != "let" {
 		t.Errorf("s.TokenLiteral not 'let'. got=%q", s.TokenLiteral())
 		return false
@@ -54,13 +66,13 @@ func testLetStatements(t *testing.T, s ast.Statement, expectedIdentifer string) 
 		return false
 	}
 
-	if letStmt.Name.Value != expectedIdentifer {
-		t.Errorf("letStmt.Name.Value not %q. got=%q", expectedIdentifer, letStmt.Name.Value)
+	if letStmt.Name.Value != expectedIdentifier {
+		t.Errorf("letStmt.Name.Value not %q. got=%q", expectedIdentifier, letStmt.Name.Value)
 		return false
 	}
 
-	if letStmt.Name.TokenLiteral() != expectedIdentifer {
-		t.Errorf("s.Name not %q. got=%q", expectedIdentifer, letStmt.Name)
+	if letStmt.Name.TokenLiteral() != expectedIdentifier {
+		t.Errorf("s.Name not %q. got=%q", expectedIdentifier, letStmt.Name)
 		return false
 	}
 
