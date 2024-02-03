@@ -60,7 +60,7 @@ func TestReturnStatements(t *testing.T) {
 	for _, stmt := range program.Statements {
 		returnStmt, ok := stmt.(*ast.ReturnStatement)
 		if !ok {
-			t.Errorf("stmt not *ast.ReturnStatement. go=%T", stmt)
+			t.Errorf("stmt not *ast.ReturnStatement. got=%T", stmt)
 			continue
 		}
 		if returnStmt.TokenLiteral() != "return" {
