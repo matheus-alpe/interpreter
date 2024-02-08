@@ -50,6 +50,8 @@ func New(l *lexer.Lexer) *Parser {
 
 	p.registerPrefix(token.IDENT, p.parseIdentifier)
 	p.registerPrefix(token.INT, p.parseIntegerLiteral)
+	p.registerPrefix(token.BANG, p.parsePrefixExpression)
+	p.registerPrefix(token.MINUS, p.parsePrefixExpression)
 
 	return p
 }
@@ -135,6 +137,7 @@ func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 func (p *Parser) parseExpression(precedence int) ast.Expression {
 	prefix := p.prefixParseFns[p.currentToken.Type]
 	if prefix == nil {
+		p.appendError(fmt.Sprintf("no prefix parse function for %q found", p.currentToken.Type))
 		return nil
 	}
 
@@ -151,13 +154,24 @@ func (p *Parser) parseIntegerLiteral() ast.Expression {
 
 	value, err := strconv.ParseInt(p.currentToken.Literal, 0, 64)
 	if err != nil {
-		msg := fmt.Sprintf("could not parse %q as integer", p.currentToken.Literal)
-		p.errors = append(p.errors, msg)
+		p.appendError(fmt.Sprintf("could not parse %q as integer", p.currentToken.Literal))
 		return nil
 	}
 
 	lit.Value = value
 	return lit
+}
+
+func (p *Parser) parsePrefixExpression() ast.Expression {
+	expression := &ast.PrefixExpression{
+		Token:    p.currentToken,
+		Operator: p.currentToken.Literal,
+	}
+
+	p.nextToken()
+	expression.Right = p.parseExpression(PREFIX)
+
+	return expression
 }
 
 func (p *Parser) currentTokenIs(t token.TokenType) bool {
@@ -174,7 +188,7 @@ func (p *Parser) expectPeek(t token.TokenType) bool {
 		return true
 	}
 
-	p.peekError(t)
+	p.appendError(fmt.Sprintf("expected next token to be %q, got %q instead", t, p.peekToken.Type))
 	return false
 }
 
@@ -182,8 +196,7 @@ func (p *Parser) Errors() []string {
 	return p.errors
 }
 
-func (p *Parser) peekError(t token.TokenType) {
-	msg := fmt.Sprintf("expected next token to be %q, got %q instead", t, p.peekToken.Type)
+func (p *Parser) appendError(msg string) {
 	p.errors = append(p.errors, msg)
 }
 
