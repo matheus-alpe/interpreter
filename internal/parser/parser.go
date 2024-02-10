@@ -46,14 +46,17 @@ type Parser struct {
 
 	prefixParseFns map[token.TokenType]prefixParseFn
 	infixParseFns  map[token.TokenType]infixParseFn
+
+	traceble bool
 }
 
-func New(l *lexer.Lexer) *Parser {
+func New(l *lexer.Lexer, traceble ...bool) *Parser {
 	p := &Parser{
 		l:              l,
 		errors:         []string{},
 		prefixParseFns: make(map[token.TokenType]prefixParseFn),
 		infixParseFns:  make(map[token.TokenType]infixParseFn),
+		traceble:       len(traceble) > 0,
 	}
 
 	// Read two tokens, so currentToken and peekToken are both set
@@ -139,6 +142,10 @@ func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
 }
 
 func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
+	if p.traceble {
+		defer untrace(trace("parseExpressionStatement"))
+	}
+
 	stmt := &ast.ExpressionStatement{Token: p.currentToken}
 
 	stmt.Expression = p.parseExpression(LOWEST)
@@ -151,6 +158,10 @@ func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 }
 
 func (p *Parser) parseExpression(precedence int) ast.Expression {
+	if p.traceble {
+		defer untrace(trace("parseExpression"))
+	}
+
 	prefix := p.prefixParseFns[p.currentToken.Type]
 	if prefix == nil {
 		p.appendError(fmt.Sprintf("no prefix parse function for %q found", p.currentToken.Type))
@@ -178,6 +189,10 @@ func (p *Parser) parseIdentifier() ast.Expression {
 }
 
 func (p *Parser) parseIntegerLiteral() ast.Expression {
+	if p.traceble {
+		defer untrace(trace("parseIntegerLiteral"))
+	}
+
 	lit := &ast.IntegerLiteral{Token: p.currentToken}
 
 	value, err := strconv.ParseInt(p.currentToken.Literal, 0, 64)
@@ -191,6 +206,10 @@ func (p *Parser) parseIntegerLiteral() ast.Expression {
 }
 
 func (p *Parser) parsePrefixExpression() ast.Expression {
+	if p.traceble {
+		defer untrace(trace("parsePrefixExpression"))
+	}
+
 	expression := &ast.PrefixExpression{
 		Token:    p.currentToken,
 		Operator: p.currentToken.Literal,
@@ -203,6 +222,10 @@ func (p *Parser) parsePrefixExpression() ast.Expression {
 }
 
 func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
+	if p.traceble {
+		defer untrace(trace("parseInfixExpression"))
+	}
+
 	expression := &ast.InfixExpression{
 		Token:    p.currentToken,
 		Operator: p.currentToken.Literal,
