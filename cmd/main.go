@@ -15,5 +15,5 @@ func main() {
 	}
 
 	fmt.Printf("%s, welcome to Shitscript!\n", user.Username)
-	repl.Start(os.Stdin)
+	repl.Start(os.Stdin, os.Stdout)
 }
