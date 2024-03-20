@@ -121,7 +121,6 @@ func evalIntegerInfixExpression(operator string, left, right object.Object) obje
 
 func evalIfExpression(ie *ast.IfExpression) object.Object {
 	condition := Eval(ie.Condition)
-	println(condition.Inspect())
 
 	if isTruthy(condition) {
 		return Eval(ie.Consequence)
