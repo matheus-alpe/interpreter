@@ -18,6 +18,7 @@ const (
 	PRODUCT     // *
 	PREFIX      // -X OR !X
 	CALL        // myFunction(X)
+	INDEX       // array[index]
 )
 
 var precedences = map[token.TokenType]int{
@@ -30,6 +31,7 @@ var precedences = map[token.TokenType]int{
 	token.SLASH:    PRODUCT,
 	token.ASTERISK: PRODUCT,
 	token.LPARENT:  CALL,
+	token.LBRACKET: INDEX,
 }
 
 type (
@@ -72,6 +74,7 @@ func New(l *lexer.Lexer, traceble ...bool) *Parser {
 	p.registerPrefix(token.IF, p.parseIfExpression)
 	p.registerPrefix(token.FUNCTION, p.parseFunctionLiteral)
 
+	p.registerInfix(token.LBRACKET, p.parseIndexExpression)
 	p.registerInfix(token.PLUS, p.parseInfixExpression)
 	p.registerInfix(token.MINUS, p.parseInfixExpression)
 	p.registerInfix(token.SLASH, p.parseInfixExpression)
@@ -96,6 +99,9 @@ func (p *Parser) nextToken() {
 }
 
 func (p *Parser) ParseProgram() *ast.Program {
+	if p.traceble {
+		defer untrace(trace("ParseProgram"))
+	}
 	program := &ast.Program{}
 	program.Statements = []ast.Statement{}
 
@@ -112,6 +118,9 @@ func (p *Parser) ParseProgram() *ast.Program {
 }
 
 func (p *Parser) parseStatement() ast.Statement {
+	if p.traceble {
+		defer untrace(trace("parseStatement"))
+	}
 	switch p.currentToken.Type {
 	case token.LET:
 		return p.parseLetStatement()
@@ -123,6 +132,9 @@ func (p *Parser) parseStatement() ast.Statement {
 }
 
 func (p *Parser) parseLetStatement() *ast.LetStatement {
+	if p.traceble {
+		defer untrace(trace("parseLetStatement"))
+	}
 	stmt := &ast.LetStatement{Token: p.currentToken}
 
 	if !p.expectPeek(token.IDENT) {
@@ -146,6 +158,9 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 }
 
 func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
+	if p.traceble {
+		defer untrace(trace("parseReturnStatement"))
+	}
 	stmt := &ast.ReturnStatement{Token: p.currentToken}
 
 	p.nextToken()
@@ -203,6 +218,9 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 }
 
 func (p *Parser) parseIdentifier() ast.Expression {
+	if p.traceble {
+		defer untrace(trace("parseIdentifier"))
+	}
 	return &ast.Identifier{Token: p.currentToken, Value: p.currentToken.Literal}
 }
 
@@ -224,6 +242,9 @@ func (p *Parser) parseIntegerLiteral() ast.Expression {
 }
 
 func (p *Parser) parseStringLiteral() ast.Expression {
+	if p.traceble {
+		defer untrace(trace("parseStringLiteral"))
+	}
 	return &ast.StringLiteral{Token: p.currentToken, Value: p.currentToken.Literal}
 }
 
@@ -252,6 +273,9 @@ func (p *Parser) parsePrefixExpression() ast.Expression {
 }
 
 func (p *Parser) parseGroupedExpression() ast.Expression {
+	if p.traceble {
+		defer untrace(trace("parseGroupedExpression"))
+	}
 	p.nextToken()
 
 	exp := p.parseExpression(LOWEST)
@@ -264,6 +288,9 @@ func (p *Parser) parseGroupedExpression() ast.Expression {
 }
 
 func (p *Parser) parseArrayLiteral() ast.Expression {
+	if p.traceble {
+		defer untrace(trace("parseArrayLiteral"))
+	}
 	array := &ast.ArrayLiteral{Token: p.currentToken}
 
 	array.Elements = p.parseExpressionList(token.RBRACKET)
@@ -296,6 +323,9 @@ func (p *Parser) parseExpressionList(end token.TokenType) []ast.Expression {
 }
 
 func (p *Parser) parseIfExpression() ast.Expression {
+	if p.traceble {
+		defer untrace(trace("parseIfExpression"))
+	}
 
 	expression := &ast.IfExpression{Token: p.currentToken}
 
@@ -330,6 +360,9 @@ func (p *Parser) parseIfExpression() ast.Expression {
 }
 
 func (p *Parser) parseFunctionLiteral() ast.Expression {
+	if p.traceble {
+		defer untrace(trace("parseFunctionLiteral"))
+	}
 	lit := &ast.FunctionLiteral{Token: p.currentToken}
 
 	if !p.expectPeek(token.LPARENT) {
@@ -348,12 +381,18 @@ func (p *Parser) parseFunctionLiteral() ast.Expression {
 }
 
 func (p *Parser) parseCallExpression(function ast.Expression) ast.Expression {
+	if p.traceble {
+		defer untrace(trace("parseCallExpression"))
+	}
 	exp := &ast.CallExpression{Token: p.currentToken, Function: function}
 	exp.Arguments = p.parseExpressionList(token.RPARENT)
 	return exp
 }
 
 func (p *Parser) parseFunctionParameters() []*ast.Identifier {
+	if p.traceble {
+		defer untrace(trace("parseFunctionParameters"))
+	}
 	identifiers := []*ast.Identifier{}
 
 	if p.peekTokenIs(token.RPARENT) {
@@ -381,6 +420,23 @@ func (p *Parser) parseFunctionParameters() []*ast.Identifier {
 	return identifiers
 }
 
+func (p *Parser) parseIndexExpression(left ast.Expression) ast.Expression {
+	if p.traceble {
+		defer untrace(trace("parseIndexExpression"))
+	}
+
+	exp := &ast.IndexExpression{Token: p.currentToken, Left: left}
+
+	p.nextToken()
+	exp.Index = p.parseExpression(LOWEST)
+
+	if !p.expectPeek(token.RBRACKET) {
+		return nil
+	}
+
+	return exp
+}
+
 func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
 	if p.traceble {
 		defer untrace(trace("parseInfixExpression"))
@@ -400,6 +456,9 @@ func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
 }
 
 func (p *Parser) parseBlockStatement() *ast.BlockStatement {
+	if p.traceble {
+		defer untrace(trace("parseBlockStatement"))
+	}
 	block := &ast.BlockStatement{Token: p.currentToken}
 	block.Statements = []ast.Statement{}
 
